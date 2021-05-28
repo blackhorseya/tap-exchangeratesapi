@@ -2,12 +2,21 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
+	"time"
 
+	"github.com/blackhorseya/tap-exchangeratesapi/internal/pkg/entity/config"
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
+)
+
+const (
+	BaseUrl = "http://api.exchangeratesapi.io/v1"
 )
 
 var cfgFile string
@@ -25,7 +34,28 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Run: func(cmd *cobra.Command, args []string) {
+		c := new(config.Config)
+		err := viper.Unmarshal(c)
+		cobra.CheckErr(err)
+
+		uri := fmt.Sprintf("%s/%s", BaseUrl, c.StartDate)
+		params := url.Values{}
+		if len(c.ApiKey) != 0 {
+			params.Add("access_key", c.ApiKey)
+		}
+		if len(c.Base) != 0 {
+			params.Add("base", c.Base)
+		}
+
+		resp, err := request(uri, params.Encode())
+		cobra.CheckErr(err)
+		defer resp.Body.Close()
+
+		payload, err := ioutil.ReadAll(resp.Body)
+		cobra.CheckErr(err)
+		fmt.Println(string(payload))
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -70,4 +100,20 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
+}
+
+func request(url string, params string) (*http.Response, error) {
+	uri := url + "?" + params
+	resp, err := http.Get(uri)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func do(base string, startDate time.Time) {
+	// todo: 2021-05-29|03:05|doggy|implement me
+	panic("implement me")
 }
