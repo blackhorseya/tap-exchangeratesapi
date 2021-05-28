@@ -11,6 +11,7 @@ import (
 )
 
 var cfgFile string
+var stateFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -40,7 +41,8 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./configs/config.json", "config file (default is $HOME/.tap-exchangeratesapi.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./configs/config.json", "config file")
+	rootCmd.PersistentFlags().StringVarP(&stateFile, "state", "s", "", "state file")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
