@@ -2,7 +2,7 @@ package config
 
 // Config declare configuration of application
 type Config struct {
-	ApiKey    string `json:"api_key" mapstructure:"api_key"`
+	APIKey    string `json:"api_key" mapstructure:"api_key"`
 	Base      string `json:"base" mapstructure:"base"`
 	StartDate string `json:"start_date" mapstructure:"start_date"`
 }

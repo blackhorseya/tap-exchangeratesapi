@@ -2,13 +2,13 @@ package singer
 
 // Property declare property struct
 type Property struct {
-	Type   string `json:"type"`
-	Format string `json:"format"`
+	Type   interface{} `json:"type"`
+	Format string      `json:"format"`
 }
 
 // Schema declare schema struct
 type Schema struct {
-	Type       string               `json:"type"`
+	Type       interface{}          `json:"type"`
 	Properties map[string]*Property `json:"properties"`
 }
 
@@ -17,10 +17,7 @@ func NewSchema() *Schema {
 	return &Schema{
 		Type: "object",
 		Properties: map[string]*Property{
-			"date": {
-				Type:   "string",
-				Format: "date-time",
-			},
+			"date": {Type: "string", Format: "date-time"},
 		},
 	}
 }
