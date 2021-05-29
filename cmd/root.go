@@ -124,6 +124,7 @@ func request(url string, params string) (*model.APIResponse, error) {
 }
 
 func do(base string, apiKey string, startDate time.Time) {
+	// todo: 2021-05-30|02:37|doggy|added default state
 	nextDate := startDate
 	today := time.Now()
 	var prevSchema *singer.Schema
@@ -169,6 +170,16 @@ func do(base string, apiKey string, startDate time.Time) {
 			fmt.Println(writeSchema)
 		}
 
+		resDate, err := timex.YYYYMMdd2Time(payload.Date)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		if resDate == nextDate {
+			// todo: 2021-05-30|02:36|doggy|write record
+		}
+
+		// todo: 2021-05-30|02:37|doggy|update default state
 		prevSchema = schema
 		nextDate = nextDate.Add(24 * time.Hour)
 	}
