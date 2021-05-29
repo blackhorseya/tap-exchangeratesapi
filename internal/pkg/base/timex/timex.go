@@ -24,6 +24,7 @@ func Time2YYYYMMdd(t time.Time) string {
 	return t.Format(layout)
 }
 
+// Time2RFC serve caller to given time to string layout 2006-01-02T15:04:05.000000Z
 func Time2RFC(t time.Time) string {
 	layout := "2006-01-02T15:04:05.000000Z"
 	return t.Format(layout)

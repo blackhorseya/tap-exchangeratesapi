@@ -12,6 +12,7 @@ type Record struct {
 	Base  map[string]float64 `json:"base"`
 }
 
+// NewRecordFromResp serve caller to create a Record
 func NewRecordFromResp(resp *model.APIResponse) *Record {
 	time, _ := timex.YYYYMMdd2Time(resp.Date)
 
