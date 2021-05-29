@@ -143,16 +143,16 @@ func do(base string, apiKey string, startDate time.Time) {
 		// todo: 2021-05-30|01:47|doggy|test symbols will remove it
 		params.Add("symbols", "USD,TWD")
 
-		resp, err := request(uri, params.Encode())
+		payload, err := request(uri, params.Encode())
 		if err != nil {
 			fmt.Println(err.Error())
 		}
-		if resp == nil {
+		if payload == nil {
 			continue
 		}
 
 		// Update schema if new currency/currencies exist
-		for key := range resp.Rates {
+		for key := range payload.Rates {
 			_, ok := schema.Properties[key]
 			if !ok {
 				schema.Properties[key] = &singer.Property{Type: []string{"null", "number"}}
