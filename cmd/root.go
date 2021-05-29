@@ -6,9 +6,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
+	"reflect"
 	"time"
 
+	"github.com/blackhorseya/tap-exchangeratesapi/internal/pkg/base/singerutils"
 	"github.com/blackhorseya/tap-exchangeratesapi/internal/pkg/base/timex"
 	"github.com/blackhorseya/tap-exchangeratesapi/internal/pkg/entity/config"
 	"github.com/blackhorseya/tap-exchangeratesapi/internal/pkg/entity/singer"
@@ -20,7 +21,8 @@ import (
 )
 
 const (
-	BaseUrl = "http://api.exchangeratesapi.io/v1"
+	// BaseURL declare exchange rates api base url
+	BaseURL = "http://api.exchangeratesapi.io/v1"
 )
 
 var (
@@ -50,7 +52,7 @@ to quickly create a Cobra application.`,
 		startDate, err := timex.YYYYMMdd2Time(c.StartDate)
 		cobra.CheckErr(err)
 
-		do(c.Base, c.ApiKey, startDate)
+		do(c.Base, c.APIKey, startDate)
 	},
 }
 
@@ -94,7 +96,7 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		// fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 }
 
@@ -124,11 +126,12 @@ func request(url string, params string) (*model.APIResponse, error) {
 func do(base string, apiKey string, startDate time.Time) {
 	nextDate := startDate
 	today := time.Now()
+	var prevSchema *singer.Schema
 
 	for today.After(nextDate) {
-		fmt.Printf("Replicating exchange rate data from %s using base %s\n", nextDate, base)
+		fmt.Printf("INFO Replicating exchange rate data from %s using base %s\n", nextDate, base)
 
-		uri := fmt.Sprintf("%s/%s", BaseUrl, timex.Time2YYYYMMdd(nextDate))
+		uri := fmt.Sprintf("%s/%s", BaseURL, timex.Time2YYYYMMdd(nextDate))
 		params := url.Values{}
 		if len(apiKey) != 0 {
 			params.Add("access_key", apiKey)
@@ -137,13 +140,36 @@ func do(base string, apiKey string, startDate time.Time) {
 			params.Add("base", base)
 		}
 
+		// todo: 2021-05-30|01:47|doggy|test symbols will remove it
+		params.Add("symbols", "USD,TWD")
+
 		resp, err := request(uri, params.Encode())
 		if err != nil {
 			fmt.Println(err.Error())
 		}
+		if resp == nil {
+			continue
+		}
 
-		fmt.Println(resp)
+		// Update schema if new currency/currencies exist
+		for key := range resp.Rates {
+			_, ok := schema.Properties[key]
+			if !ok {
+				schema.Properties[key] = &singer.Property{Type: []string{"null", "number"}}
+			}
+		}
 
+		// Only write schema if it has changed
+		if !reflect.DeepEqual(prevSchema, schema) {
+			writeSchema, err := singerutils.WriteSchema(singer.NewSchemaMessage("exchange_rate", schema, []string{"date"}))
+			if err != nil {
+				fmt.Printf(err.Error())
+			}
+
+			fmt.Println(writeSchema)
+		}
+
+		prevSchema = schema
 		nextDate = nextDate.Add(24 * time.Hour)
 	}
 
