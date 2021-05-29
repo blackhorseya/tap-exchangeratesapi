@@ -1,5 +1,6 @@
 package model
 
+// APIResponse declare exchange rates api response struct
 type APIResponse struct {
 	Success    bool               `json:"success"`
 	Timestamp  int                `json:"timestamp"`
