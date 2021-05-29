@@ -17,3 +17,9 @@ func YYYYMMdd2Time(val string) (time.Time, error) {
 
 	return t, nil
 }
+
+// Time2YYYYMMdd serve caller to given time to string layout YYYY-MM-dd
+func Time2YYYYMMdd(t time.Time) string {
+	layout := "2006-01-02"
+	return t.Format(layout)
+}
