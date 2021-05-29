@@ -64,3 +64,27 @@ func TestYYYYMMdd2Time(t *testing.T) {
 		})
 	}
 }
+
+func TestTime2RFC(t *testing.T) {
+	type args struct {
+		t time.Time
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "time then string",
+			args: args{t: time1},
+			want: "2021-01-01T00:00:00.000000Z",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Time2RFC(tt.args.t); got != tt.want {
+				t.Errorf("Time2RFC() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
