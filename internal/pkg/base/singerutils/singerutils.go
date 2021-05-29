@@ -17,7 +17,11 @@ func WriteSchema(message *singer.SchemaMessage) (string, error) {
 }
 
 // WriteRecord serve caller to return record message
-func WriteRecord() (string, error) {
-	// todo: 2021-05-30|02:38|doggy|implement me
-	panic("implement me")
+func WriteRecord(message *singer.RecordMessage) (string, error) {
+	data, err := json.Marshal(message)
+	if err != nil {
+		return "", err
+	}
+
+	return string(data), nil
 }
