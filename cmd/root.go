@@ -129,9 +129,7 @@ func do(base string, apiKey string, startDate time.Time) {
 	today := time.Now()
 	var prevSchema *singer.Schema
 
-	for today.After(nextDate) {
-		fmt.Printf("INFO Replicating exchange rate data from %s using base %s\n", nextDate, base)
-
+	for today.After(nextDate) && !today.Equal(nextDate) {
 		uri := fmt.Sprintf("%s/%s", BaseURL, timex.Time2YYYYMMdd(nextDate))
 		params := url.Values{}
 		if len(apiKey) != 0 {
@@ -141,14 +139,13 @@ func do(base string, apiKey string, startDate time.Time) {
 			params.Add("base", base)
 		}
 
-		// todo: 2021-05-30|01:47|doggy|test symbols will remove it
-		params.Add("symbols", "USD,TWD")
-
 		payload, err := request(uri, params.Encode())
 		if err != nil {
 			fmt.Println(err.Error())
 		}
-		if payload == nil {
+		if payload == nil || !payload.Success {
+			prevSchema = schema
+			nextDate = nextDate.Add(24 * time.Hour)
 			continue
 		}
 
@@ -162,27 +159,33 @@ func do(base string, apiKey string, startDate time.Time) {
 
 		// Only write schema if it has changed
 		if !reflect.DeepEqual(prevSchema, schema) {
-			writeSchema, err := singerutils.WriteSchema(singer.NewSchemaMessage("exchange_rate", schema, []string{"date"}))
+			msg, err := singerutils.WriteSchema(singer.NewSchemaMessage("exchange_rate", schema, []string{"date"}))
 			if err != nil {
-				fmt.Printf(err.Error())
+				fmt.Println(err.Error())
 			}
 
-			fmt.Println(writeSchema)
+			fmt.Println(msg)
 		}
 
 		resDate, err := timex.YYYYMMdd2Time(payload.Date)
 		if err != nil {
 			fmt.Println(err.Error())
+			prevSchema = schema
+			nextDate = nextDate.Add(24 * time.Hour)
+			continue
 		}
 
-		if resDate == nextDate {
-			// todo: 2021-05-30|02:36|doggy|write record
+		if resDate.Equal(nextDate) {
+			msg, err := singerutils.WriteRecord(singer.NewRecordMessage("exchange_rate", singer.NewRecordFromResp(payload)))
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+
+			fmt.Println(msg)
 		}
 
 		// todo: 2021-05-30|02:37|doggy|update default state
 		prevSchema = schema
 		nextDate = nextDate.Add(24 * time.Hour)
 	}
-
-	// todo: 2021-05-29|03:05|doggy|implement me
 }
